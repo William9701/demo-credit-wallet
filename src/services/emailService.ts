@@ -18,8 +18,8 @@ export const sendVerificationEmail = async (email: string, verificationToken: st
 //       port: 587,
 //       secure: false,
 //       auth: {
-//         user: 'obiesieobi818@gmail.com',
-//         pass: 'akunne0bi667',
+//         user: '',
+//         pass: '',
 //       },
 //     });
 
