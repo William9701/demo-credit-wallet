@@ -1,9 +1,13 @@
 import { Request, Response } from "express";
 import knexConfig from "../database/knexfile";
+'use server';
 import Knex from "knex";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "../services/emailService";
 import { generateAccountNumber } from "../services/accountService";
+import { client } from "../services/plaidService";
+import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
+import { parseStringify } from "../utils/utils";
 
 // Initialize Knex
 const knex = Knex(knexConfig);
@@ -57,3 +61,26 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: "Error creating user account", error });
   }
 };
+
+
+export const createLinkToken = async (req: Request, res: Response) => {
+  try {
+    const tokenParams: any = {
+      user: {
+        client_user_id: process.env.PLAID_CLIENT_ID
+      },
+      client_name: `leaf`,
+      products: ['auth', 'transactions'] as Products[],
+      language: 'en',
+      country_codes: ['US'] as CountryCode[],
+    }
+
+    // Create a link token using the Plaid client
+    const response = await client.linkTokenCreate(tokenParams);
+
+    // Return the link token to the frontend
+    res.json({ link_token: response.data.link_token });
+  } catch (error) {
+    console.log(error);
+  }
+}

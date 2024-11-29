@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connect Bank Account</title>
+  </head>
+  <body>
+    <h1>Connect Your Bank Account</h1>
+
+    <!-- Button to trigger Plaid Link -->
+    <button id="link-button">Link Bank Account</button>
+
+    <!-- Include Plaid Link script -->
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script>
+      async function createLinkToken() {
+        console.log("i am called first");
+        const response = await fetch("/api/create_link_token", {
+          method: "POST",
+        });
+        const data = await response.json();
+        console.log("i am called");
+        return data.link_token;
+      }
+
+      // Handle Plaid Link button click
+      document.getElementById("link-button").onclick = async function () {
+        const linkToken = await createLinkToken();
+        console.log(`Link Token: ${linkToken}`);
+
+        const handler = Plaid.create({
+          token: linkToken,
+          onSuccess: function (public_token, metadata) {
+            // Send public token to your server for access token exchange
+            fetch("/exchange_public_token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ public_token }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("Access token:", data.access_token);
+              });
+          },
+          onExit: function (error, metadata) {
+            if (error) {
+              console.error(error);
+            }
+          },
+        });
+        handler.open();
+      };
+    </script>
+  </body>
+</html>

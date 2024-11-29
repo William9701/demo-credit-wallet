@@ -15,11 +15,14 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
     "email-validator": "^2.0.4",
     "express": "^4.21.1",
     "knex": "^3.1.0",
     "mysql2": "^3.11.4",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "plaid": "^30.0.0",
+    "react-plaid-link": "^3.6.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
