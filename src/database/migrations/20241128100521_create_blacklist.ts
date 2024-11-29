@@ -14,6 +14,7 @@ export async function up(knex: Knex): Promise<void> {
         table.date('loan_due_date').nullable();  // Loan due date
         table.string('phone_number').nullable();  // Optional phone number
         table.string('account_number').unique().nullable(); // Optional phone number
+        table.string('access_token').unique().nullable(); // plaid access_token
         table.string('email_verification_token').unique().nullable(); // email_verification_token
         table.string('profile_picture').nullable();  // URL to profile picture
         table.boolean('is_email_verified').defaultTo(false);  // Email verification status

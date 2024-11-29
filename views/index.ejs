@@ -3,16 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connect Bank Account</title>
+    <title></title>
   </head>
-  <body>
+  <body  id="bdy" data-id="<%= token %>" >
     <h1>Connect Your Bank Account</h1>
+
+    <form action="">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required />
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+
+      <button id="Loginbtn" type="submit">Sign In</button>
+    </form>
 
     <!-- Button to trigger Plaid Link -->
     <button id="link-button">Link Bank Account</button>
 
     <!-- Include Plaid Link script -->
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script>
+      document.getElementById("Loginbtn").onclick = async function (event) {
+        event.preventDefault(); // Prevent default form submission behavior
+
+        // Get form data
+        const email = document.getElementById("username").value; // Match `email` field in the backend
+        const password = document.getElementById("password").value;
+
+        try {
+          // Make the POST request to the login API
+          const response = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }), // Ensure keys match backend expectations
+          });
+
+          // Check if the response is successful
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert(`Login failed: ${errorData.message}`);
+            return;
+          }
+
+          // Parse the response
+          const data = await response.json();
+
+          console.log(data.user.id)
+
+          // Set the user ID in the data-id attribute
+          document.getElementById('bdy').getAttribute('data-id') == data.user.id;
+
+          // Redirect to the dashboard with the token
+          window.location = `/dashboard/${data.user.id}`;
+        } catch (error) {
+          console.error("Error logging in:", error);
+          alert("An error occurred. Please try again.");
+        }
+      };
+    </script>
     <script>
       async function createLinkToken() {
         console.log("i am called first");
@@ -28,15 +77,18 @@
       document.getElementById("link-button").onclick = async function () {
         const linkToken = await createLinkToken();
         console.log(`Link Token: ${linkToken}`);
+        const token = document.getElementById("bdy").getAttribute("data-id");
 
         const handler = Plaid.create({
           token: linkToken,
           onSuccess: function (public_token, metadata) {
             // Send public token to your server for access token exchange
-            fetch("/exchange_public_token", {
+            fetch("/api/exchange_public_token", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ public_token }),
+              body: JSON.stringify({ public_token: public_token,
+                token: token
+               }),
             })
               .then((response) => response.json())
               .then((data) => {

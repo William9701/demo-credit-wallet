@@ -19,8 +19,16 @@ app.use(bodyParser.json());
 
 
 app.get('/', (req, res) => {
-    res.render('index', { title: 'Demo Credit', message: 'Welcome to Demo Credit!' });
+    res.render('index', { token: '12345', message: 'Welcome to Demo Credit!' });
   });
+  app.get('/dashboard/:token', (req, res) => {
+    const token = req.params.token;
+  
+    
+  
+    res.render('index', { token: token});
+  });
+  
   
 // Mount the users route
 app.use('/api', usersRouter);
