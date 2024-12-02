@@ -20,6 +20,7 @@
 
     <!-- Button to trigger Plaid Link -->
     <button id="link-button">Link Bank Account</button>
+    <button id="acctDetails">view account details</button>
 
     <!-- Include Plaid Link script -->
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
@@ -63,14 +64,33 @@
       };
     </script>
     <script>
+      document.getElementById('acctDetails').onclick = async function(){
+        const token = document.getElementById('bdy').getAttribute('data-id');
+        console.log(`Account details for user ${token}`);
+        fetch("/api/get_account_details", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                token: token
+               }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("Account details:", data);
+              });
+      }
+    </script>
+    <script>
       async function createLinkToken() {
         console.log("i am called first");
         const response = await fetch("/api/create_link_token", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: '1' }),
         });
         const data = await response.json();
-        console.log("i am called");
-        return data.link_token;
+        console.log("i am called", data.token.linkToken);
+        return data.token.linkToken;
       }
 
       // Handle Plaid Link button click
@@ -82,12 +102,13 @@
         const handler = Plaid.create({
           token: linkToken,
           onSuccess: function (public_token, metadata) {
+            console.log("Public Token:", public_token);
             // Send public token to your server for access token exchange
             fetch("/api/exchange_public_token", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ public_token: public_token,
-                token: token
+                id: "1"
                }),
             })
               .then((response) => response.json())
