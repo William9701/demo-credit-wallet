@@ -4,6 +4,21 @@ import knexConfig from "../database/knexfile";
 import Knex from "knex";
 const knex = Knex(knexConfig);
 
+declare interface CreateTransactionProps {
+  name: string;
+  amount: string;
+  senderId: string;
+  senderBankId: string;
+  receiverId: string;
+  receiverBankId: string;
+  email: string;
+}
+
+declare interface getTransactionsByBankIdProps {
+  bankId: string;
+}
+
+
 // Create a new transaction
 export const createTransaction = async (transaction: CreateTransactionProps) => {
   try {

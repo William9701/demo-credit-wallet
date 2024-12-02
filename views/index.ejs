@@ -9,13 +9,8 @@
     <h1>Connect Your Bank Account</h1>
 
     <form action="">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required />
-
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required />
-
-      <button id="Loginbtn" type="submit">Sign In</button>
+      <label for="userId"> Enter User ID:</label>
+      <input type="text" id="userId" name="userId" required />
     </form>
 
     <!-- Button to trigger Plaid Link -->
@@ -24,45 +19,7 @@
 
     <!-- Include Plaid Link script -->
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-    <script>
-      document.getElementById("Loginbtn").onclick = async function (event) {
-        event.preventDefault(); // Prevent default form submission behavior
-
-        // Get form data
-        const email = document.getElementById("username").value; // Match `email` field in the backend
-        const password = document.getElementById("password").value;
-
-        try {
-          // Make the POST request to the login API
-          const response = await fetch("/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }), // Ensure keys match backend expectations
-          });
-
-          // Check if the response is successful
-          if (!response.ok) {
-            const errorData = await response.json();
-            alert(`Login failed: ${errorData.message}`);
-            return;
-          }
-
-          // Parse the response
-          const data = await response.json();
-
-          console.log(data.user.id)
-
-          // Set the user ID in the data-id attribute
-          document.getElementById('bdy').getAttribute('data-id') == data.user.id;
-
-          // Redirect to the dashboard with the token
-          window.location = `/dashboard/${data.user.id}`;
-        } catch (error) {
-          console.error("Error logging in:", error);
-          alert("An error occurred. Please try again.");
-        }
-      };
-    </script>
+   
     <script>
       document.getElementById('acctDetails').onclick = async function(){
         const token = document.getElementById('bdy').getAttribute('data-id');
@@ -81,12 +38,13 @@
       }
     </script>
     <script>
-      async function createLinkToken() {
+      
+      async function createLinkToken(UserId) {
         console.log("i am called first");
         const response = await fetch("/api/create_link_token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: '1' }),
+          body: JSON.stringify({ id: UserId }),
         });
         const data = await response.json();
         console.log("i am called", data.token.linkToken);
@@ -95,7 +53,11 @@
 
       // Handle Plaid Link button click
       document.getElementById("link-button").onclick = async function () {
-        const linkToken = await createLinkToken();
+        const UserId = document.getElementById("userId").value;
+        
+        const linkToken = await createLinkToken(UserId);
+        document.getElementById("userId").value = "";
+        
         console.log(`Link Token: ${linkToken}`);
         const token = document.getElementById("bdy").getAttribute("data-id");
 
@@ -108,12 +70,12 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ public_token: public_token,
-                id: "1"
+                id: UserId
                }),
             })
               .then((response) => response.json())
               .then((data) => {
-                console.log("Access token:", data.access_token);
+                console.log("fundingSourceUrl:", data.fundingSourceUrl);
               });
           },
           onExit: function (error, metadata) {

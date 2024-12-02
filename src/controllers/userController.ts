@@ -1,15 +1,11 @@
 import { Request, Response } from "express";
 import knexConfig from "../database/knexfile";
-'use server';
 import Knex from "knex";
 import bcrypt from "bcryptjs";
 import { sendVerificationEmail } from "../services/emailService";
 import { generateAccountNumber } from "../services/accountService";
-import { client } from "../services/plaidService";
-import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products, TransferIntentCreateRequest } from "plaid";
-import { parseStringify } from "../utils/utils";
 import crypto from "crypto";
-import { PaymentAmountCurrency } from 'plaid';
+
 
 
 // Initialize Knex

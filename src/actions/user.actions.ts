@@ -484,7 +484,6 @@ export const createLinkToken = async (user: User) => {
         language: 'en',
         country_codes: ['US'] as CountryCode[],
       }
-      console.log(tokenParams)
       const response = await plaidClient.linkTokenCreate(tokenParams);
       console.log(response.data.link_token)
   
@@ -502,6 +501,7 @@ export const createBankAccount = async ({
   fundingSourceUrl,
   shareableId,
 }: createBankAccountProps) => {
+  const trx = await knex.transaction();
   try {
     const [newBankAccountId] = await knex('bank_accounts').insert({
       userId,
@@ -510,9 +510,9 @@ export const createBankAccount = async ({
       accessToken,
       fundingSourceUrl,
       shareableId,
-    }).returning("id");
-
-    return parseStringify({ bankAccountId: newBankAccountId });
+    });
+    await trx.commit();
+    return parseStringify({ newBankAccountId });
   } catch (error) {
     console.error("Error creating bank account:", error);
   }
@@ -552,7 +552,7 @@ export const exchangePublicToken = async (
 
     if (!fundingSourceUrl) throw Error;
 
-    await createBankAccount({
+    const { newBankAccountId } = await createBankAccount({
       userId: user.id,
       bankId: itemId,
       accountId: accountData.account_id,
@@ -560,8 +560,9 @@ export const exchangePublicToken = async (
       fundingSourceUrl,
       shareableId: encryptId(accountData.account_id),
     });
+    
 
-    return parseStringify({ publicTokenExchange: "complete" });
+    return parseStringify({ newBankAccountId });
   } catch (error) {
     console.error("Error during public token exchange:", error);
   }
