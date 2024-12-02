@@ -5,7 +5,7 @@ import { createUser,loginUser } from "../controllers/userController";
 import {    getAccountDetails } from "../controllers/transactionController"
 import { signUp, createLinkToken, exchangePublicToken } from "../actions/user.actions"
 import knexConfig from "../database/knexfile";
-import { createTransfer } from "../actions/dwolla.actions"
+import { createTransfer, getFundingSourceBalance } from "../actions/dwolla.actions"
 import Knex from "knex";
 // Initialize Knex
 const knex = Knex(knexConfig);
@@ -135,3 +135,32 @@ router.post("/create_transfer", async (req: any, res: any) => {
   });
 
 export default router;
+
+router.post("/get_wallet_balance", async (req: any, res: any) => {
+    const { id } = req.body;
+    // Start a transaction
+    const trx = await knex.transaction();
+  
+    // Retrieve the user by ID
+    const user = await trx("users")
+      .select('*') // Correct syntax for selecting all columns
+      .where({ id: id }) // Ensure `req.body` has an `id` field
+      .first();
+      
+    // Handle case where user is not found
+    if (!user) {
+      await trx.rollback(); // Rollback transaction if necessary
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    try {
+        const wallet = await getFundingSourceBalance(user.fundingSourceUrl)
+        return res.status(200).json({ wallet });
+        
+      } catch (err) {
+        console.error("Error getting balance:", err);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+
+    
+});
