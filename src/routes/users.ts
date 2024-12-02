@@ -49,10 +49,17 @@ declare type Account = {
 
 const router = express.Router();
 
-router.post("/create_user", async (req, res) => {
+router.post("/create_user", async (req: Request, res: any) => {
+  try {
   // Then pass the data to the signUp function
   const data = await signUp(req.body);
   res.status(201).json({ data });
+  } catch (error: any) {
+    const specificMessage =
+        error.body._embedded.errors[0]?.message || "Unknown error occurred";
+      return res.status(500).json({ error: specificMessage });
+    
+  }
 });
 
 router.post("/exchange_public_token", async (req: any, res: any) => {
@@ -136,97 +143,101 @@ router.post("/create_link_token", async (req: any, res: any) => {
 });
 
 router.post("/create_transfer", async (req: any, res: any) => {
-  const { sourceFundingSourceUrl, destinationFundingSourceUrl, amount } =
-    req.body;
+  const { sourceFundingSourceUrl, destinationFundingSourceUrl, amount } = req.body;
 
   try {
     console.log("Source Funding URL:", sourceFundingSourceUrl);
     console.log("Destination Funding URL:", destinationFundingSourceUrl);
 
     // Step 1: Attempt to create the transfer
-    const transferUrl = await createTransfer({
-      sourceFundingSourceUrl,
-      destinationFundingSourceUrl,
-      amount,
-    });
+    try {
+      const transferUrl = await createTransfer({
+        sourceFundingSourceUrl,
+        destinationFundingSourceUrl,
+        amount,
+      });
 
-    if (transferUrl) {
-      console.log("Transfer created successfully:", transferUrl);
+      if (transferUrl) {
+        console.log("Transfer created successfully:", transferUrl);
 
-      // Step 2: Start a transaction to update user balances
-      const trx = await knex.transaction();
+        // Step 2: Start a transaction to update user balances
+        const trx = await knex.transaction();
 
-      try {
-        // Parse the amount as a decimal for consistent calculations
-        const parsedAmount = parseFloat(amount);
+        try {
+          const parsedAmount = parseFloat(amount);
 
-        // Search for users with matching source and destination URLs
-        const sourceUser = await trx("users")
-          .select("*")
-          .where({ fundingSourceUrl: sourceFundingSourceUrl })
-          .first();
+          const sourceUser = await trx("users")
+            .select("*")
+            .where({ fundingSourceUrl: sourceFundingSourceUrl })
+            .first();
 
-        const destinationUser = await trx("users")
-          .select("*")
-          .where({ fundingSourceUrl: destinationFundingSourceUrl })
-          .first();
+          const destinationUser = await trx("users")
+            .select("*")
+            .where({ fundingSourceUrl: destinationFundingSourceUrl })
+            .first();
 
-        // Update source user balance if found
-        if (sourceUser) {
-          console.log("Source user found:", sourceUser);
+          if (sourceUser) {
+            console.log("Source user found:", sourceUser);
+            const currentBalance = parseFloat(sourceUser.balance);
+            const updatedBalance: any = (currentBalance - parsedAmount).toFixed(2);
 
-          // Convert balance to a number for proper arithmetic
-          const currentBalance = parseFloat(sourceUser.balance);
+            if (updatedBalance < 0) {
+              throw new Error("Insufficient funds in source account.");
+            }
 
-          // Subtract the amount
-          const updatedBalance = (currentBalance - parsedAmount).toFixed(2);
+            await trx("users")
+              .where({ id: sourceUser.id })
+              .update({ balance: updatedBalance });
 
-          await trx("users")
-            .where({ id: sourceUser.id })
-            .update({ balance: updatedBalance });
+            console.log("Source user balance updated:", updatedBalance);
+          }
 
-          console.log("Source user balance updated:", updatedBalance);
+          if (destinationUser) {
+            console.log("Destination user found:", destinationUser);
+            const currentBalance = parseFloat(destinationUser.balance);
+            const updatedBalance = (currentBalance + parsedAmount).toFixed(2);
+
+            await trx("users")
+              .where({ id: destinationUser.id })
+              .update({ balance: updatedBalance });
+
+            console.log("Destination user balance updated:", updatedBalance);
+          }
+
+          await trx.commit();
+
+          return res.status(200).json({ transferUrl });
+        } catch (err) {
+          await trx.rollback();
+          console.error("Error updating balances:", err);
+          return res.status(400).json({ error: err });
         }
-
-        // Update destination user balance if found
-        if (destinationUser) {
-          console.log("Destination user found:", destinationUser);
-
-          // Convert balance to a number for proper arithmetic
-          const currentBalance = parseFloat(destinationUser.balance);
-
-          // Add the amount
-          const updatedBalance = (currentBalance + parsedAmount).toFixed(2);
-
-          await trx("users")
-            .where({ id: destinationUser.id })
-            .update({ balance: updatedBalance });
-
-          console.log("Destination user balance updated:", updatedBalance);
-        }
-
-        // Commit the transaction
-        await trx.commit();
-
-        // Return success response
-        return res.status(200).json({ transferUrl });
-      } catch (err) {
-        // Rollback the transaction on error
-        await trx.rollback();
-        console.error("Error updating balances:", err);
-        return res
-          .status(500)
-          .json({ error: "Failed to update user balances" });
+      } else {
+        return res.status(400).json({ error: "Failed to create transfer" });
       }
-    } else {
-      console.error("Failed to create transfer");
-      return res.status(400).json({ error: "Failed to create transfer" });
+    } catch (apiError: any) {
+      // Handle API-specific errors from Dwolla
+      // console.error("Error creating transfer:", apiError);
+     // Access the nested error message
+     try {
+      const specificMessage =
+        apiError.body._embedded.errors[0]?.message || "Unknown error occurred";
+      console.error("Specific error message:", specificMessage);
+      return res.status(500).json({ error: specificMessage });
+    } catch (e) {
+      console.error("Error extracting specific message:", e);
+    }
+    
+
+      return res.status(500).json({ error: "Bad request either format not complete or incorrect funding source url" });
     }
   } catch (err) {
-    console.error("Error creating transfer:", err);
+    console.error("Unhandled error:", err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
 
 router.post("/get_wallet_balance", async (req: any, res: any) => {
   const { id } = req.body;
