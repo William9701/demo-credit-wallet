@@ -383,27 +383,68 @@ async function cleanUserData(userData: any) {
   return cleanedData;
 }
 
+const checkAdjutorBlacklisted = async (email: String) => {
+  try {
+    const response = await fetch(
+      `https://adjutor.lendsqr.com/v2/verification/karma/${email}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer sk_live_EHr2C48xVeca52XCiy8VbbGuqMSKw41dyJI58oEV",
+        },
+      }
+    );
+
+    // Check if the response status is OK
+    if (!response.ok) {
+      throw new Error(`API call failed with status: ${response.status}`);
+    }
+
+    const { data } = await response.json(); // Parse the JSON response
+    const { amount_in_contention, karma_type, default_date } = data;
+
+    // Check if user meets any blacklist criteria
+    if (
+      parseFloat(amount_in_contention) > 0 || // Financial contention
+      (karma_type.karma && karma_type.karma !== "Others") // Specific blacklist type
+    ) {
+      return true; // User is blacklisted
+    }
+
+    return false; // User is not blacklisted
+  } catch (error) {
+    console.error("Error checking Adjutor blacklist:", error);
+    return false; // Handle errors gracefully
+  }
+};
+
+
 
 
 export  const signUp = async ({ password, ...userData }: SignUpParams) => {
-  const userdata = await cleanUserData(userData);
   const { email, firstName, lastName } = userData
   try {
-    console.log(userData);
     const trx = await knex.transaction();
+
+    const blackListed = await checkAdjutorBlacklisted(email)
+    if (blackListed) {
+      throw new Error("User is blacklisted")
+    }
 
     const dwollaCustomerUrl = await createDwollaCustomer({
       ...userData,
       type: "personal",
     });
 
+    
+
     const account_number = generateAccountNumber();
-     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     if (!dwollaCustomerUrl) throw new Error("Error creating Dwolla customer");
 
     const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
-    const fundingSourceUrl = await addFundingSource2(dwollaCustomerId)
-    console.log("funding sourse: ",fundingSourceUrl);
+    const fundingSource = await addFundingSource2(dwollaCustomerId)
+    const fundingSourceUrl = `https://api-sandbox.dwolla.com/funding-sources/${fundingSource}`
 
     const [newUserId] = await knex('users').insert({
       ...userData,
@@ -418,14 +459,13 @@ export  const signUp = async ({ password, ...userData }: SignUpParams) => {
     })
 
     const user = await trx("users")
-      .select("id", "firstName", "lastName", "email", "account_number")
+      .select("*")
       .where({ id: newUserId })
       .first();
 
     await trx.commit();
-    console.log("User signed up successfully:", user);
 
-    return { userId: user.id }; // Return the user ID
+    return { user }; // Return the user
   } catch (error) {
     console.error("Error during sign-up:", error);
   }

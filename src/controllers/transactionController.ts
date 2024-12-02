@@ -95,16 +95,16 @@ export const createLinkToken = async (req: Request, res: Response) => {
       console.log("Token received:", token);
   
       // Find the user by ID
-      const user = await knex("users").where({ id: token }).first();
+      const user = await knex("bank_accounts").where({ id: token }).first();
   
       if (!user) {
         res.status(404).json({ message: "User not found" });
         return;
       }
-      const acces_token: any = user.acces_token; // Incorrect spelling
-        const access_token: any = user.access_token; // Corrected spelling
+      
+        const access_token: any = user.accessToken; // Corrected spelling
 
-        console.log("User found:", user);
+        console.log("User found:", access_token);
         const response = await client.accountsGet({ access_token }); 
         const accounts = response.data.accounts;
         console.log("Accounts:", accounts);

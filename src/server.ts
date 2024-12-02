@@ -19,7 +19,7 @@ app.use(express.json());
 
 
 app.get('/', (req, res) => {
-    res.render('index', { token: '12345', message: 'Welcome to Demo Credit!' });
+    res.render('index', { token: '1', message: 'Welcome to Demo Credit!' });
   });
   app.get('/dashboard/:token', (req, res) => {
     const token = req.params.token;

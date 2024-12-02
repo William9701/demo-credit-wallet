@@ -30,10 +30,9 @@ declare type User = {
 
 const router = express.Router();
 
-router.post("/users", (req, res) => {
-    console.log("Received body in the router:", req.body);
+router.post("/create_user", async (req, res) => {
     // Then pass the data to the signUp function
-    const data = signUp(req.body);
+    const data = await signUp(req.body);
     res.status(201).json({ data });
   });
   

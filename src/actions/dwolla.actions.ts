@@ -531,8 +531,6 @@ export const addFundingSource2 = async (dwollaCustomerId: string) => {
       // other required data like routing number, account number, etc.
     };
 
-    console.log('Dwolla Customer ID:', dwollaCustomerId);
-
     // Construct the customer URL
     const customerUrl = `https://api-sandbox.dwolla.com/customers/${dwollaCustomerId}`;
 
@@ -540,11 +538,9 @@ export const addFundingSource2 = async (dwollaCustomerId: string) => {
     const response = await dwollaClient.get(`${customerUrl}/funding-sources`);
     
     const fundingSources = response.body._embedded["funding-sources"];
-    console.log(fundingSources)
 
     if (fundingSources && fundingSources.length > 0) {
       const name = fundingSources[0].id;
-      console.log('Funding Source Name:', name);
       return name;
     } else {
       console.log('No funding sources found for this customer.');
@@ -560,7 +556,7 @@ export const addFundingSource2 = async (dwollaCustomerId: string) => {
 export const getFundingSourceBalance = async (fundingSourceId: string) => {
   try {
     // Construct the balance URL for the funding source
-    const balanceUrl = `https://api-sandbox.dwolla.com/funding-sources/${fundingSourceId}/balance`;
+    const balanceUrl = `${fundingSourceId}/balance`;
 
     // Fetch the balance
     const response = await dwollaClient.get(balanceUrl);
