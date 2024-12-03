@@ -20,14 +20,7 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
     res.render('index', { token: '1', message: 'Welcome to Demo Credit!' });
-  });
-  app.get('/dashboard/:token', (req, res) => {
-    const token = req.params.token;
-  
-    
-  
-    res.render('index', { token: token});
-  });
+});
   
   
 // Mount the users route
@@ -37,3 +30,5 @@ app.use('/api', usersRouter);
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+export default app
