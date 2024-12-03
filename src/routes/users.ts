@@ -91,7 +91,7 @@ router.post("/exchange_public_token", async (req: any, res: any) => {
     // Call createLinkToken with the user data
     const { newBankAccountId } = await exchangePublicToken(public_token, user);
 
-    console.log("Bank ID (newBankAccountId):", newBankAccountId);
+    // console.log("Bank ID (newBankAccountId):", newBankAccountId);
 
     // Debug: Fetch all rows from bank_accounts
     const allBankAccounts = await trx("bank_accounts").select("*");
@@ -100,7 +100,7 @@ router.post("/exchange_public_token", async (req: any, res: any) => {
     await trx.commit();
 
     const newBankAccount = await getAccountDetail(newBankAccountId);
-    console.log("Link Created:", newBankAccount);
+    // console.log("Link Created:", newBankAccount);
 
     // Send a success response
     res.status(200).json({ newBankAccount });
