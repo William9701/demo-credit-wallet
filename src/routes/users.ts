@@ -63,7 +63,7 @@ router.post("/create_user", async (req: Request, res: any) => {
   );
   } catch (error: any) {
     const specificMessage =
-        error.body._embedded.errors[0]?.message || "Unknown error occurred";
+        error.body?._embedded.errors[0]?.message || "Unknown error occurred";
       return res.status(500).json({ error: specificMessage });
     
   }
