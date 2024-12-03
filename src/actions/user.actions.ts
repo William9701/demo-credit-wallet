@@ -105,6 +105,7 @@ async function cleanUserData(userData: any) {
 }
 
 const checkAdjutorBlacklisted = async (email: String) => {
+  console.log("Checking Adjutor blacklist for email:", email);
   try {
     const response = await fetch(
       `https://adjutor.lendsqr.com/v2/verification/karma/${email}`,
