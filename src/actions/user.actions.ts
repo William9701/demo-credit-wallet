@@ -155,7 +155,7 @@ export  const signUp = async ({ password, ...userData }: SignUpParams) => {
       throw new Error("User is blacklisted")
     }
 
-    console.log("here before create dolla user")
+    
 
     const dwollaCustomerUrl = await createDwollaCustomer({
       ...userData,
@@ -163,7 +163,7 @@ export  const signUp = async ({ password, ...userData }: SignUpParams) => {
     });
 
     
-    console.log("here before create dolla user")
+    
     const account_number = generateAccountNumber();
     const hashedPassword = await bcrypt.hash(password, 10);
     if (!dwollaCustomerUrl) throw new Error("Error creating Dwolla customer");

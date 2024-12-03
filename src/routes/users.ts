@@ -53,7 +53,7 @@ router.post("/create_user", async (req: Request, res: any) => {
   try {
   // Then pass the data to the signUp function
   const data = await signUp(req.body);
-  console.log("here", data);
+  
   return res.status(200).send(
     JSON.stringify(
       { data },
