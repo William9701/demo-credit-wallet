@@ -248,7 +248,7 @@ The database is structured with the following tables:
 
 ## E-R Diagram
 
-![E-R Diagram](https://dbdesigner.page.link/ihBHwMvCUdrBQyKp9)
+See the [E-R Diagram](https://dbdesigner.page.link/ihBHwMvCUdrBQyKp9)
 
 ---
 
