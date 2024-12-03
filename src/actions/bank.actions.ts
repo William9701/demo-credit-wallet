@@ -238,6 +238,8 @@ export const getTransactions = async ({
 
 
 
+
+
 export async function getAccountDetail(id: string) {
   const trx = await knex.transaction();
 

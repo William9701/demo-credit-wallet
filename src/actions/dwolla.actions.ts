@@ -255,3 +255,27 @@ export const getFundingSourceBalance = async (fundingSourceId: string) => {
     throw error;
   }
 };
+
+export const get_user_transactions = async (customerUrl: string) => {
+  try {
+    // Use `await` to handle the promise properly
+    const response = await dwollaClient.get(`${customerUrl}/transfers`);
+
+    // Check if the response contains the expected data
+    const transfers = response.body._embedded?.transfers;
+
+    if (transfers && transfers.length > 0) {
+      // Print all transactions or a specific property (e.g., status of the first one)
+      console.log("Transactions:", transfers);
+      console.log("First transaction status:", transfers[0].status);
+    } else {
+      console.log("No transactions found for this customer.");
+    }
+
+    return transfers; // Return the list of transfers if needed
+  } catch (error) {
+    console.error("Error fetching user transactions:", error);
+    throw error;
+  }
+};
+

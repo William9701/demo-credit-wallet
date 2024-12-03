@@ -12,6 +12,7 @@ import knexConfig from "../database/knexfile";
 import {
   createTransfer,
   getFundingSourceBalance,
+  get_user_transactions,
 } from "../actions/dwolla.actions";
 import { getAccountDetail } from "../actions/bank.actions";
 import Knex from "knex";
@@ -53,7 +54,13 @@ router.post("/create_user", async (req: Request, res: any) => {
   try {
   // Then pass the data to the signUp function
   const data = await signUp(req.body);
-  res.status(201).json({ data });
+  return res.status(200).send(
+    JSON.stringify(
+      { data },
+      null, // No replacer function
+      2 // Indentation level (2 spaces)
+    )
+  );
   } catch (error: any) {
     const specificMessage =
         error.body._embedded.errors[0]?.message || "Unknown error occurred";
@@ -264,6 +271,137 @@ router.post("/get_wallet_balance", async (req: any, res: any) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+router.post("/get_user", async (req: Request, res: any) => {
+  const { id } = req.body;
+  const trx = await knex.transaction();
+
+  try {
+    // Retrieve the user by ID
+    const user = await trx("users")
+      .select("*")
+      .where({ id: id })
+      .first();
+
+    // Handle case where user is not found
+    if (!user) {
+      await trx.rollback(); // Rollback transaction if necessary
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await trx.commit();
+
+    // Pretty-print JSON output
+    return res.status(200).send(
+      JSON.stringify(
+        { user },
+        null, // No replacer function
+        2 // Indentation level (2 spaces)
+      )
+    );
+  } catch (error) {
+    await trx.rollback();
+    return res.status(500).json({ message: "An error occurred", error });
+  }
+});
+
+router.post("/get_user_transactions", async (req: Request, res: any) => {
+  const { id } = req.body;
+  const trx = await knex.transaction();
+
+  try {
+    // Retrieve the user by ID
+    const user = await trx("users")
+      .select("*")
+      .where({ id: id })
+      .first();
+
+    // Handle case where user is not found
+    if (!user) {
+      await trx.rollback();
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const fundingSourceUrl = user.fundingSourceUrl;
+
+    // Retrieve transactions from the `dwolla_transfers` table
+    let transactions = await trx("dwolla_transfers")
+      .select("*")
+      .where(function () {
+        this.where("source_funding_source", fundingSourceUrl).orWhere(
+          "destination_funding_source",
+          fundingSourceUrl
+        );
+      });
+
+    // Add `transactionType` to each transaction
+    transactions = transactions.map((transaction: any) => {
+      if (transaction.source_funding_source === fundingSourceUrl) {
+        transaction.transactionType = "debit";
+      } else if (transaction.destination_funding_source === fundingSourceUrl) {
+        transaction.transactionType = "credit";
+      }
+      return transaction;
+    });
+
+    // Commit the transaction
+    await trx.commit();
+
+    // Return the user and transactions
+    return res.status(200).send(
+      JSON.stringify(
+        {
+          user,
+          transactions,
+        },
+        null, // No replacer function
+        2 // Indentation level (2 spaces)
+      )
+    );
+  } catch (error) {
+    // Rollback the transaction on error
+    await trx.rollback();
+    return res.status(500).json({ message: "An error occurred", error });
+  }
+});
+
+
+
+
+router.post("/get_DWOLLA_user_transactions", async (req: Request, res: any) =>{
+  const { id } = req.body;
+  const trx = await knex.transaction();
+
+  try {
+    // Retrieve the user by ID
+    const user = await trx("users")
+      .select("*")
+      .where({ id: id })
+      .first();
+
+    // Handle case where user is not found
+    if (!user) {
+      await trx.rollback();
+      return res.status(404).json({ message: "User not found" });
+    }
+    const customerUrl = user.dwollaCustomerUrl
+    console.log(customerUrl)
+    const data = await get_user_transactions(customerUrl);
+    return res.status(200).send(
+      JSON.stringify(
+        {
+          data
+        },
+        null, // No replacer function
+        2 // Indentation level (2 spaces)
+      )
+    );
+  } catch (error) {
+    
+  }
+});
+
 
 router.post("/get_account_details", getAccountDetails);
 
