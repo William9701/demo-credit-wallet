@@ -1,4 +1,3 @@
-"use server";
 import express from "express";
 import { Request, Response, NextFunction } from "express";
 import { loginUser } from "../controllers/userController";
@@ -53,7 +52,6 @@ const router = express.Router();
 router.post("/create_user", async (req: Request, res: any) => {
   try {
   // Then pass the data to the signUp function
-  console.log(req.body);
   const data = await signUp(req.body);
   console.log("here", data);
   return res.status(200).send(
