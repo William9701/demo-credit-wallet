@@ -144,9 +144,10 @@ const checkAdjutorBlacklisted = async (email: String) => {
 
 export  const signUp = async ({ password, ...userData }: SignUpParams) => {
   const { email, firstName, lastName } = userData
+  console.log(userData)
   try {
     const trx = await knex.transaction();
-    console.log(email)
+    
 
     const blackListed = await checkAdjutorBlacklisted(email)
     if (blackListed) {
