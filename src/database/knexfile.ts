@@ -4,10 +4,10 @@ import path from "path";
 const config: Knex.Config = {
   client: "mysql2",
   connection: {
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "root",
-    database: process.env.DB_NAME || "demo_credit_wallet",
+    host: "byjh6nz1zpqorjhnn5my-mysql.services.clever-cloud.com",
+      user: "uljihcrptkgm8tqh" ,
+      password: "At65YllX1A3fmUynB0bj",
+      database: "byjh6nz1zpqorjhnn5my" ,
   },
   migrations: {
     directory: path.resolve(__dirname, 'migrations'), // Adjust this path
