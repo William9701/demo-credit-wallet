@@ -62,7 +62,7 @@ To get started with this project, follow the steps below:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/demo-credit-wallet.git
+   git clone git@github.com:William9701/demo-credit-wallet.git
    cd demo-credit-wallet
    ```
 
@@ -248,7 +248,7 @@ The database is structured with the following tables:
 
 ## E-R Diagram
 
-![E-R Diagram](https://app.dbdesigner.net/uploads/your-er-diagram.png) *(Example link to your E-R diagram)*
+![E-R Diagram](https://dbdesigner.page.link/ihBHwMvCUdrBQyKp9) *(Example link to your E-R diagram)*
 
 ---
 
